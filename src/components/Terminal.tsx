@@ -30,6 +30,7 @@ export default function Terminal() {
   const [hacking, setHacking] = useState(false);
   const [raviRunning, setRaviRunning] = useState(false);
   const [raviActivated, setRaviActivated] = useState(false);
+  const [typewriting, setTypewriting] = useState(false);
   const [raviFlicker, setRaviFlicker] = useState(false);
   const [glyphRain, setGlyphRain] = useState<{ id: number; x: number; y: number; glyph: string; delay: number; size: number }[]>([]);
 
@@ -38,6 +39,8 @@ export default function Terminal() {
   const bootingRef = useRef(false);
   const skipRef = useRef(false);
   const wakeUpRef = useRef<(() => void) | null>(null);
+  const typewritingRef = useRef(false);
+  const typewriterAbortRef = useRef<AbortController | null>(null);
 
   function completeBoot(skip = false) {
     bootingRef.current = false;
@@ -64,10 +67,11 @@ export default function Terminal() {
     completeBoot(true);
   }
 
-  // Global keydown skip during boot — only fires while booting
+  // Global keydown skip during boot or typewriter animation
   useEffect(() => {
     function onKey() {
       if (bootingRef.current) triggerSkip();
+      else if (typewritingRef.current) typewriterAbortRef.current?.abort();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -144,12 +148,20 @@ export default function Terminal() {
   }, []);
 
   useEffect(() => {
+    return () => { typewriterAbortRef.current?.abort(); };
+  }, []);
+
+  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "instant" });
   }, [lines]);
 
   function handleContainerClick() {
     if (bootingRef.current) {
       triggerSkip();
+      return;
+    }
+    if (typewritingRef.current) {
+      typewriterAbortRef.current?.abort();
       return;
     }
     inputRef.current?.focus();
@@ -315,6 +327,79 @@ export default function Terminal() {
     void label;
   }
 
+  async function runTypewriter(cmdText: string, twLines: string[]) {
+    const ac = new AbortController();
+    typewriterAbortRef.current = ac;
+    typewritingRef.current = true;
+    setTypewriting(true);
+
+    setLines((prev) => [...prev, `> ${cmdText}`]);
+
+    const sleep = (ms: number): Promise<void> =>
+      new Promise((resolve) => {
+        if (ac.signal.aborted) { resolve(); return; }
+        const id = setTimeout(resolve, ms);
+        ac.signal.addEventListener("abort", () => { clearTimeout(id); resolve(); }, { once: true });
+      });
+
+    let i = 0;
+
+    outer: for (; i < twLines.length; i++) {
+      if (ac.signal.aborted) break;
+
+      if (i > 0) {
+        await sleep(120);
+        if (ac.signal.aborted) break;
+      }
+
+      const line = twLines[i];
+
+      if (line === "") {
+        setLines((prev) => [...prev, ""]);
+        continue;
+      }
+
+      setLines((prev) => [...prev, ""]);
+
+      for (let c = 0; c < line.length; c++) {
+        if (ac.signal.aborted) {
+          setLines((prev) => {
+            const next = [...prev];
+            next[next.length - 1] = line;
+            return [...next, ...twLines.slice(i + 1)];
+          });
+          i = twLines.length;
+          break outer;
+        }
+        await sleep(10);
+        if (ac.signal.aborted) {
+          setLines((prev) => {
+            const next = [...prev];
+            next[next.length - 1] = line;
+            return [...next, ...twLines.slice(i + 1)];
+          });
+          i = twLines.length;
+          break outer;
+        }
+        setLines((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = line.slice(0, c + 1);
+          return next;
+        });
+      }
+    }
+
+    // Aborted during between-line pause: dump remaining lines
+    if (ac.signal.aborted && i < twLines.length) {
+      setLines((prev) => [...prev, ...twLines.slice(i)]);
+    }
+
+    typewritingRef.current = false;
+    typewriterAbortRef.current = null;
+    setTypewriting(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
   function triggerShake() {
     setShaking(false);
     requestAnimationFrame(() =>
@@ -327,7 +412,7 @@ export default function Terminal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (hacking || raviRunning || confirming) return;
+    if (hacking || raviRunning || confirming || typewriting) return;
     const cmd = input.trim();
 
     if (cmd === "") {
@@ -344,16 +429,20 @@ export default function Terminal() {
         if (result === CLEAR_SENTINEL) {
           setLines([]);
         } else if (typeof result === "object" && !Array.isArray(result) && "lines" in result) {
-          const { lines: out, effect } = result as CommandOutput;
-          if (effect === "hacking") {
-            setLines((prev) => [...prev, `> ${cmd}`]);
-            runHacking(cmd);
-          } else if (effect === "ravi") {
-            setLines((prev) => [...prev, `> ${cmd}`]);
-            runRavi();
+          if ("type" in result && result.type === "typewriter") {
+            runTypewriter(cmd, result.lines);
           } else {
-            setLines((prev) => [...prev, `> ${cmd}`, ...out]);
-            if (effect === "shake") triggerShake();
+            const { lines: out, effect } = result as Extract<CommandOutput, { effect?: unknown }>;
+            if (effect === "hacking") {
+              setLines((prev) => [...prev, `> ${cmd}`]);
+              runHacking(cmd);
+            } else if (effect === "ravi") {
+              setLines((prev) => [...prev, `> ${cmd}`]);
+              runRavi();
+            } else {
+              setLines((prev) => [...prev, `> ${cmd}`, ...out]);
+              if (effect === "shake") triggerShake();
+            }
           }
         } else {
           const output = Array.isArray(result) ? result : [result];
@@ -408,7 +497,7 @@ export default function Terminal() {
         <div ref={bottomRef} />
       </div>
 
-      {!booting && !hacking && !raviRunning && (
+      {!booting && !hacking && !raviRunning && !typewriting && (
         <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
           <span className="select-none">{confirming ? "" : raviActivated ? "agent-rmp@ravios:~$" : ">"}</span>
           <div className="relative flex-1">

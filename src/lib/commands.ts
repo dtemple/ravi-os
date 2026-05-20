@@ -4,10 +4,9 @@ export const CLEAR_SENTINEL = "__CLEAR__";
 
 export type CommandEffect = "shake" | "hacking" | "ravi";
 
-export type CommandOutput = {
-  lines: string[];
-  effect?: CommandEffect;
-};
+export type CommandOutput =
+  | { lines: string[]; effect?: CommandEffect }
+  | { type: 'typewriter'; lines: string[] };
 
 type Handler = (args: string[]) => string | string[] | CommandOutput;
 
@@ -172,76 +171,85 @@ export const commands: Record<string, Handler> = {
       ];
     }
     if (sub === "0") {
-      return [
-        ">>> CLASSIFIED // EYES ONLY AGENT RMP <<<",
-        "",
-        "  MISSION 0: UNLOCK THE TOOLS",
-        "",
-        "  OBJECTIVE: Gain access to the internet builder toolkit.",
-        "    — Set up GitHub (your code vault)",
-        "    — Set up Vercel (your launch pad)",
-        "    — Set up v0 (your AI co-pilot)",
-        "",
-        "  STATUS: AVAILABLE — awaiting your move.",
-        "",
-        ">>> INCOMING TRANSMISSION // EYES ONLY <<<",
-        "",
-        "  Before the first briefing, the system requests intel.",
-        "",
-        "  No forms.",
-        "  No grades.",
-        "  No wrong answers.",
-        "",
-        "  Just curiosity.",
-        "",
-        "  — What websites do you visit the most?",
-        "  — What games, apps, or tools light up your brain?",
-        "  — Who are your favorite creators?",
-        "  — What do you wish existed on the internet but doesn't?",
-        "  — What's the weirdest website idea you've ever had?",
-        "  — If you had internet powers, what would they be?",
-        "  — What do you hope to learn?",
-        "",
-        "  Bring your answers to the first briefing.",
-        "",
-        "  Optional:",
-        "  transmit early intelligence to:",
-        "  dtemple@gmail.com",
-        "",
-        ">>> END TRANSMISSION <<<",
-      ];
+      return {
+        type: 'typewriter' as const,
+        lines: [
+          ">>> CLASSIFIED // EYES ONLY AGENT RMP <<<",
+          "",
+          "  MISSION 0: UNLOCK THE TOOLS",
+          "",
+          "  OBJECTIVE: Gain access to the internet builder toolkit.",
+          "    — Set up GitHub (your code vault)",
+          "    — Set up Vercel (your launch pad)",
+          "    — Set up v0 (your AI co-pilot)",
+          "",
+          "  STATUS: AVAILABLE — awaiting your move.",
+          "",
+          ">>> INCOMING TRANSMISSION // EYES ONLY <<<",
+          "",
+          "  Before the first briefing, the system requests intel.",
+          "",
+          "  No forms.",
+          "  No grades.",
+          "  No wrong answers.",
+          "",
+          "  Just curiosity.",
+          "",
+          "  — What websites do you visit the most?",
+          "  — What games, apps, or tools light up your brain?",
+          "  — Who are your favorite creators?",
+          "  — What do you wish existed on the internet but doesn't?",
+          "  — What's the weirdest website idea you've ever had?",
+          "  — If you had internet powers, what would they be?",
+          "  — What do you hope to learn?",
+          "",
+          "  Bring your answers to the first briefing.",
+          "",
+          "  Optional:",
+          "  transmit early intelligence to:",
+          "  dtemple@gmail.com",
+          "",
+          ">>> END TRANSMISSION <<<",
+        ],
+      };
     }
     if (sub === "1") {
-      return [
-        ">>> CLASSIFIED // EYES ONLY AGENT RMP <<<",
-        "",
-        "  MISSION 1: BUILD YOUR BASE",
-        "",
-        "  OBJECTIVE: Ship a real website to the internet.",
-        "    — Design your personal homepage",
-        "    — Add favorite things, funny buttons, weird interactions",
-        "    — Make it yours. Make it strange. Make it real.",
-        "",
-        "  STATUS: LOCKED — complete Mission 0 first.",
-        "",
-        ">>> END TRANSMISSION <<<",
-      ];
+      return {
+        type: 'typewriter' as const,
+        lines: [
+          ">>> CLASSIFIED // EYES ONLY AGENT RMP <<<",
+          "",
+          "  MISSION 1: BUILD YOUR BASE",
+          "",
+          "  OBJECTIVE: Ship a real website to the internet.",
+          "    — Design your personal homepage",
+          "    — Add favorite things, funny buttons, weird interactions",
+          "    — Make it yours. Make it strange. Make it real.",
+          "",
+          "  STATUS: LOCKED — complete Mission 0 first.",
+          "",
+          ">>> END TRANSMISSION <<<",
+        ],
+      };
     }
     if (sub === "2") {
-      return [
-        ">>> CLASSIFIED // EYES ONLY AGENT RMP <<<",
-        "",
-        "  MISSION 2: CREATE SOMETHING WEIRD",
-        "",
-        "  OBJECTIVE: Build an interactive project of your choosing.",
-        "    — Joke generator? Fortune teller? Mini game?",
-        "    — Battle simulator? Soundboard? Internet toy?",
-        "    — The exact project is TBD — we choose it together.",
-        "",
-        "  STATUS: LOCKED — complete Mission 1 first.",
-        "",
-        ">>> END TRANSMISSION <<<",
-      ];
+      return {
+        type: 'typewriter' as const,
+        lines: [
+          ">>> CLASSIFIED // EYES ONLY AGENT RMP <<<",
+          "",
+          "  MISSION 2: CREATE SOMETHING WEIRD",
+          "",
+          "  OBJECTIVE: Build an interactive project of your choosing.",
+          "    — Joke generator? Fortune teller? Mini game?",
+          "    — Battle simulator? Soundboard? Internet toy?",
+          "    — The exact project is TBD — we choose it together.",
+          "",
+          "  STATUS: LOCKED — complete Mission 1 first.",
+          "",
+          ">>> END TRANSMISSION <<<",
+        ],
+      };
     }
     return `mission: unknown mission '${sub}'. Try: mission 0, mission 1, or mission 2`;
   },
@@ -263,7 +271,7 @@ export const commands: Record<string, Handler> = {
     "KIRAN  — Strategic Operations Commander",
     "  Status: Planning three moves ahead",
     "  Special Ability: Knows every detail before anyone asks",
-    "  Weakness: Cannot resist a perfectly organized spreadsheet",
+    "  Weakness: Suspiciously vulnerable to Visa special offers",
     "",
     "TONNIE — Chief Healing Officer",
     "  Status: Extremely kind",
