@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { commands, CLEAR_SENTINEL } from "@/lib/commands";
+import { commands, CLEAR_SENTINEL, randomGibberish, type CommandOutput } from "@/lib/commands";
 
 const BOOT_LINES = [
   "BOOTING RAVI-OS...",
@@ -25,6 +25,8 @@ export default function Terminal() {
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
   const [booting, setBooting] = useState(false);
+  const [shaking, setShaking] = useState(false);
+  const [hacking, setHacking] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -148,22 +150,65 @@ export default function Terminal() {
     }
   }
 
+  async function runHacking(label: string) {
+    setHacking(true);
+    const deadline = Date.now() + 2500;
+    await new Promise<void>((resolve) => {
+      const interval = setInterval(() => {
+        setLines((prev) => [...prev, randomGibberish()]);
+        if (Date.now() >= deadline) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 80);
+    });
+    const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+    await pause(300);
+    setLines((prev) => [...prev, "ACCESS DENIED."]);
+    await pause(400);
+    setLines((prev) => [...prev, "Nice try, Agent."]);
+    await pause(400);
+    setLines((prev) => [...prev, "Try harder."]);
+    setHacking(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
+    void label;
+  }
+
+  function triggerShake() {
+    setShaking(false);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        setShaking(true);
+        setTimeout(() => setShaking(false), 650);
+      })
+    );
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (hacking) return;
     const cmd = input.trim();
 
     if (cmd === "") {
       setLines((prev) => [...prev, ">"]);
     } else {
-      const tokens = cmd.split(/\s+/);
-      const name = tokens[0].toLowerCase();
-      const args = tokens.slice(1);
-      const handler = commands[name];
+      const normalized = cmd.toLowerCase();
+      const handler = commands[normalized] ?? commands[normalized.split(/\s+/)[0]];
+      const displayName = normalized.split(/\s+/)[0];
 
       if (handler) {
-        const result = handler(args);
+        const result = handler(normalized.split(/\s+/).slice(commands[normalized] ? 0 : 1));
         if (result === CLEAR_SENTINEL) {
           setLines([]);
+        } else if (typeof result === "object" && !Array.isArray(result) && "lines" in result) {
+          const { lines: out, effect } = result as CommandOutput;
+          if (effect === "hacking") {
+            setLines((prev) => [...prev, `> ${cmd}`]);
+            runHacking(cmd);
+          } else {
+            setLines((prev) => [...prev, `> ${cmd}`, ...out]);
+            if (effect === "shake") triggerShake();
+          }
         } else {
           const output = Array.isArray(result) ? result : [result];
           setLines((prev) => [...prev, `> ${cmd}`, ...output]);
@@ -172,7 +217,7 @@ export default function Terminal() {
         setLines((prev) => [
           ...prev,
           `> ${cmd}`,
-          `command not found: ${name}`,
+          `command not found: ${displayName}`,
         ]);
       }
 
@@ -185,7 +230,7 @@ export default function Terminal() {
 
   return (
     <div
-      className="flex flex-col h-screen bg-black text-green-400 font-mono text-sm p-4 cursor-text"
+      className={`flex flex-col h-screen bg-black text-green-400 font-mono text-sm p-4 cursor-text${shaking ? " terminal-shake" : ""}`}
       onClick={handleContainerClick}
     >
       <div className="flex-1 overflow-y-auto pb-2">
@@ -197,7 +242,7 @@ export default function Terminal() {
         <div ref={bottomRef} />
       </div>
 
-      {!booting && (
+      {!booting && !hacking && (
         <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
           <span className="select-none">&gt;</span>
           <div className="relative flex-1">

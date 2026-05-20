@@ -1,6 +1,37 @@
+import confetti from "canvas-confetti";
+
 export const CLEAR_SENTINEL = "__CLEAR__";
 
-type Handler = (args: string[]) => string | string[];
+export type CommandEffect = "shake" | "hacking";
+
+export type CommandOutput = {
+  lines: string[];
+  effect?: CommandEffect;
+};
+
+type Handler = (args: string[]) => string | string[] | CommandOutput;
+
+const HEX = "0123456789abcdef";
+const HACK_LABELS = [
+  "BREACH ATTEMPT",
+  "FIREWALL PROBE",
+  "ACCESS SCAN",
+  "PACKET DECRYPT",
+  "ROUTE BYPASS",
+  "CHECKSUM FAIL",
+  "BUFFER OVERFLOW",
+];
+
+export function randomGibberish(): string {
+  const hex = Array.from({ length: 6 }, () =>
+    Array.from({ length: 4 }, () => HEX[Math.floor(Math.random() * 16)]).join("")
+  ).join(" ");
+  const label =
+    Math.random() < 0.35
+      ? `  [${HACK_LABELS[Math.floor(Math.random() * HACK_LABELS.length)]}]`
+      : "";
+  return hex + label;
+}
 
 const JOKES = [
   "Why do programmers prefer dark mode? Because light attracts bugs.",
@@ -189,6 +220,32 @@ export const commands: Record<string, Handler> = {
     "Most believe it is harmless.",
     "They are probably wrong.",
   ],
+
+  "summon dragon": (): CommandOutput => ({
+    lines: [
+      "         __    __",
+      "        /  \\  /  \\",
+      "       / /\\ \\/ /\\ \\",
+      "      ( ( o )( o ) )",
+      "       \\ \\-'--'-/ /",
+      "    ____\\/  /\\ \\/____",
+      "   /   /\\  /  \\  /\\  \\",
+      "  (___/  \\/____\\/  \\___)  ",
+      "",
+      "  The dragon stirs.",
+    ],
+    effect: "shake",
+  }),
+
+  "hack the mainframe": (): CommandOutput => ({
+    lines: [],
+    effect: "hacking",
+  }),
+
+  confetti: () => {
+    confetti({ particleCount: 120, spread: 80, origin: { y: 0.9 } });
+    return "🎉";
+  },
 
   wizard: () => [
     "SCANNING AGENT ID...",
