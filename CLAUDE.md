@@ -63,7 +63,7 @@ The homepage is primarily a fake interactive terminal.
 Example opening sequence:
 
 ```
-BOOTING RAVIOS...
+BOOTING RAVI-OS...
 
 SECURE CONNECTION ESTABLISHED
 
