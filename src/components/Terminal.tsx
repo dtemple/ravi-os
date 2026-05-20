@@ -25,6 +25,7 @@ export default function Terminal() {
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
   const [booting, setBooting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [hacking, setHacking] = useState(false);
 
@@ -34,11 +35,21 @@ export default function Terminal() {
   const skipRef = useRef(false);
   const wakeUpRef = useRef<(() => void) | null>(null);
 
-  function completeBoot() {
+  function completeBoot(skip = false) {
     bootingRef.current = false;
     setBooting(false);
-    sessionStorage.setItem("ravios-booted", "true");
-    setTimeout(() => inputRef.current?.focus(), 0);
+    if (skip) {
+      sessionStorage.setItem("ravios-booted", "true");
+      setTimeout(() => inputRef.current?.focus(), 0);
+    } else {
+      setLines((prev) => [
+        ...prev,
+        "",
+        "Accept your mission? [Y/N]",
+      ]);
+      setConfirming(true);
+      setTimeout(() => inputRef.current?.focus(), 0);
+    }
   }
 
   function triggerSkip() {
@@ -46,13 +57,13 @@ export default function Terminal() {
     skipRef.current = true;
     wakeUpRef.current?.();
     setLines(BOOT_LINES);
-    completeBoot();
+    completeBoot(true);
   }
 
-  // Global keydown skip during boot
+  // Global keydown skip during boot — only fires while booting
   useEffect(() => {
     function onKey() {
-      triggerSkip();
+      if (bootingRef.current) triggerSkip();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -104,7 +115,7 @@ export default function Terminal() {
         }
       }
 
-      if (!skipRef.current) completeBoot();
+      if (!skipRef.current) completeBoot(false);
     }
 
     runBoot();
@@ -129,7 +140,45 @@ export default function Terminal() {
     inputRef.current?.focus();
   }
 
+  function enterNormalMode() {
+    setConfirming(false);
+    sessionStorage.setItem("ravios-booted", "true");
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  function handleConfirmKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    const key = e.key.toLowerCase();
+    if (key === "y" || key === "enter") {
+      e.preventDefault();
+      const helpOutput = commands.help([]) as string[];
+      setLines((prev) => [
+        ...prev,
+        "> Y",
+        "",
+        "MISSION ACCEPTED.",
+        "",
+        ...helpOutput,
+      ]);
+      enterNormalMode();
+    } else if (key === "n") {
+      e.preventDefault();
+      setLines((prev) => [
+        ...prev,
+        "> N",
+        "",
+        "...interesting choice, Agent.",
+        "The mission proceeds regardless.",
+        "Type 'help' when you're ready.",
+      ]);
+      enterNormalMode();
+    }
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (confirming) {
+      handleConfirmKey(e);
+      return;
+    }
     if (e.key === "Tab") {
       e.preventDefault();
       const prefix = input.toLowerCase();
@@ -198,7 +247,7 @@ export default function Terminal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (hacking) return;
+    if (hacking || confirming) return;
     const cmd = input.trim();
 
     if (cmd === "") {
@@ -258,7 +307,7 @@ export default function Terminal() {
 
       {!booting && !hacking && (
         <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
-          <span className="select-none">&gt;</span>
+          <span className="select-none">{confirming ? "" : ">"}</span>
           <div className="relative flex-1">
             <input
               ref={inputRef}
