@@ -130,7 +130,19 @@ export default function Terminal() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "ArrowUp") {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const prefix = input.toLowerCase();
+      if (!prefix) return;
+      const keys = Object.keys(commands);
+      const matches = keys.filter((k) => k.startsWith(prefix));
+      if (matches.length === 1) {
+        setInput(matches[0]);
+      } else if (matches.length > 1) {
+        setLines((prev) => [...prev, `> ${input}`, matches.join("  ")]);
+        setInput("");
+      }
+    } else if (e.key === "ArrowUp") {
       e.preventDefault();
       if (history.length === 0) return;
       const next = historyIndex === null ? history.length - 1 : Math.max(0, historyIndex - 1);
@@ -232,7 +244,7 @@ export default function Terminal() {
 
   return (
     <div
-      className={`flex flex-col h-screen bg-black text-green-400 font-mono text-sm p-4 cursor-text${shaking ? " terminal-shake" : ""}`}
+      className={`flex flex-col h-screen bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}`}
       onClick={handleContainerClick}
     >
       <div className="flex-1 overflow-y-auto pb-2">
