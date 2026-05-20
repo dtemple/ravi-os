@@ -137,7 +137,6 @@ export const commands: Record<string, Handler> = {
     "  level    — check your current wizard level",
     "  mission  — list missions (or: mission 0/1/2)",
     "  joke     — hear a programmer joke",
-    "  fortune  — receive a cryptic transmission",
     "  family   — known associates report",
     "  wizard   — summon the ASCII wizard",
     "──────────────────────────────────────",
