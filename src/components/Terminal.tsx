@@ -30,9 +30,12 @@ export default function Terminal() {
   const [hacking, setHacking] = useState(false);
   const [raviRunning, setRaviRunning] = useState(false);
   const [raviActivated, setRaviActivated] = useState(false);
+  const [kavirRunning, setKavirRunning] = useState(false);
+  const [kavirActivated, setKavirActivated] = useState(false);
   const [typewriting, setTypewriting] = useState(false);
   const [raviFlicker, setRaviFlicker] = useState(false);
-  const [glyphRain, setGlyphRain] = useState<{ id: number; x: number; y: number; glyph: string; delay: number; size: number }[]>([]);
+  const [kavirFlicker, setKavirFlicker] = useState(false);
+  const [glyphRain, setGlyphRain] = useState<{ id: number; x: number; y: number; glyph: string; delay: number; size: number; scheme: "ravi" | "kavir" }[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -41,6 +44,7 @@ export default function Terminal() {
   const wakeUpRef = useRef<(() => void) | null>(null);
   const typewritingRef = useRef(false);
   const typewriterAbortRef = useRef<AbortController | null>(null);
+  const raviActivatedRef = useRef(false);
 
   function completeBoot(skip = false) {
     bootingRef.current = false;
@@ -255,6 +259,7 @@ export default function Terminal() {
         glyph: GLYPHS[Math.floor(Math.random() * GLYPHS.length)],
         delay: Math.random() * 600,
         size: 10 + Math.random() * 8,
+        scheme: "ravi" as const,
       }))
     );
     setTimeout(() => setGlyphRain([]), 2500);
@@ -298,8 +303,97 @@ export default function Terminal() {
     add("");
     add("Hidden pathways unlocked.");
 
+    raviActivatedRef.current = true;
     setRaviActivated(true);
     setRaviRunning(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  async function runKavir() {
+    setKavirRunning(true);
+    const raviWasActive = raviActivatedRef.current;
+
+    // Cyan/teal sync pulse, 1.4s
+    setKavirFlicker(true);
+    setTimeout(() => setKavirFlicker(false), 1400);
+
+    // Glyph rain: musical + terminal glyphs in cyan/teal palette
+    const KAVIR_GLYPHS = ["♫", "▲", "◆", "∿", "❄", "R", "M", "P", "K", "V"];
+    setGlyphRain(
+      Array.from({ length: 25 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 96,
+        y: Math.random() * 96,
+        glyph: KAVIR_GLYPHS[Math.floor(Math.random() * KAVIR_GLYPHS.length)],
+        delay: Math.random() * 600,
+        size: 10 + Math.random() * 8,
+        scheme: "kavir" as const,
+      }))
+    );
+    setTimeout(() => setGlyphRain([]), 2500);
+
+    const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+    const add = (line: string) => setLines((prev) => [...prev, line]);
+
+    add("SEARCHING KNOWN ASSOCIATES...");
+    await pause(600);
+    add("");
+    await pause(1000);
+    add("SECOND SIGNAL DETECTED.");
+    await pause(600);
+    add("LINK STABILIZING...");
+    await pause(800);
+    add("");
+    add("KNOWN ASSOCIATE: AGENT KAVIR.");
+    await pause(900);
+    add("");
+    add("Status: FIELD-ACTIVE.");
+    await pause(200);
+    add("Clearance: ELEVATED.");
+    await pause(600);
+    add("");
+    add("Primary skills detected:");
+    await pause(200);
+    add("- musical synchronization");
+    await pause(200);
+    add("- mountain operations");
+    await pause(200);
+    add("- advanced ski buddy protocols");
+    await pause(700);
+    add("");
+    add("Compatibility with AGENT RMP:");
+    await pause(200);
+    add("EXCEPTIONALLY HIGH");
+    await pause(800);
+    add("");
+    add("Warning:");
+    await pause(200);
+    add("Co-op mode dramatically increases chaos levels.");
+    await pause(800);
+    add("");
+    add("Mission status: ongoing.");
+    await pause(200);
+    add("Full details unavailable.");
+    await pause(600);
+    add("");
+    add("Do not underestimate either of them.");
+    await pause(800);
+    add("");
+    add("DUAL AGENT LINK ESTABLISHED.");
+
+    if (raviWasActive) {
+      await pause(800);
+      add("");
+      await pause(400);
+      add("BROTHER SIGNAL SYNCHRONIZED.");
+      await pause(250);
+      add("SYSTEM STABILITY REDUCED.");
+      await pause(250);
+      add("CREATIVITY LEVELS INCREASING.");
+    }
+
+    setKavirActivated(true);
+    setKavirRunning(false);
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
@@ -412,7 +506,7 @@ export default function Terminal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (hacking || raviRunning || confirming || typewriting) return;
+    if (hacking || raviRunning || kavirRunning || confirming || typewriting) return;
     const cmd = input.trim();
 
     if (cmd === "") {
@@ -439,6 +533,9 @@ export default function Terminal() {
             } else if (effect === "ravi") {
               setLines((prev) => [...prev, `> ${cmd}`]);
               runRavi();
+            } else if (effect === "kavir") {
+              setLines((prev) => [...prev, `> ${cmd}`]);
+              runKavir();
             } else {
               setLines((prev) => [...prev, `> ${cmd}`, ...out]);
               if (effect === "shake") triggerShake();
@@ -465,12 +562,12 @@ export default function Terminal() {
 
   return (
     <div
-      className={`relative flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}${raviFlicker ? " terminal-ravi-flicker" : ""}`}
+      className={`relative flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}${raviFlicker ? " terminal-ravi-flicker" : ""}${kavirFlicker ? " terminal-kavir-sync" : ""}`}
       onClick={handleContainerClick}
     >
       {glyphRain.length > 0 && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
-          {glyphRain.map(({ id, x, y, glyph, delay, size }) => (
+          {glyphRain.map(({ id, x, y, glyph, delay, size, scheme }) => (
             <span
               key={id}
               className="absolute terminal-glyph-rain"
@@ -478,7 +575,9 @@ export default function Terminal() {
                 left: `${x}%`,
                 top: `${y}%`,
                 animationDelay: `${delay}ms`,
-                color: id % 3 === 0 ? "#fbbf24" : id % 3 === 1 ? "#fde68a" : "#4ade80",
+                color: scheme === "kavir"
+                  ? (id % 3 === 0 ? "#22d3ee" : id % 3 === 1 ? "#67e8f9" : "#4ade80")
+                  : (id % 3 === 0 ? "#fbbf24" : id % 3 === 1 ? "#fde68a" : "#4ade80"),
                 fontSize: `${size}px`,
               }}
             >
@@ -497,9 +596,9 @@ export default function Terminal() {
         <div ref={bottomRef} />
       </div>
 
-      {!booting && !hacking && !raviRunning && !typewriting && (
+      {!booting && !hacking && !raviRunning && !kavirRunning && !typewriting && (
         <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
-          <span className="select-none">{confirming ? "" : raviActivated ? "agent-rmp@ravios:~$" : ">"}</span>
+          <span className="select-none">{confirming ? "" : kavirActivated ? "agent-rmp+kavir@ravios:~$" : raviActivated ? "agent-rmp@ravios:~$" : ">"}</span>
           <div className="relative flex-1">
             <input
               ref={inputRef}

@@ -2,7 +2,7 @@ import confetti from "canvas-confetti";
 
 export const CLEAR_SENTINEL = "__CLEAR__";
 
-export type CommandEffect = "shake" | "hacking" | "ravi";
+export type CommandEffect = "shake" | "hacking" | "ravi" | "kavir";
 
 export type CommandOutput =
   | { lines: string[]; effect?: CommandEffect }
@@ -327,26 +327,10 @@ export const commands: Record<string, Handler> = {
     effect: "ravi",
   }),
 
-  kavir: () => [
-    "SEARCHING KNOWN ASSOCIATES…",
-    "",
-    "LINK ESTABLISHED.",
-    "",
-    "KNOWN ASSOCIATE: AGENT KAVIR.",
-    "  Status: FIELD-ACTIVE.",
-    "  Clearance: ELEVATED.",
-    "  Primary skills detected:",
-    "    * musical synchronization",
-    "    * mountain operations",
-    "    * advanced ski buddy protocols",
-    "",
-    "  Mission status: ongoing.",
-    "  Full details unavailable.",
-    "",
-    "  Note:",
-    "  Agents RMP and KAVIR perform better in co-op mode.",
-    "  Do not underestimate either of them.",
-  ],
+  kavir: (): CommandOutput => ({
+    lines: [],
+    effect: "kavir",
+  }),
 
   "summon dragon": (): CommandOutput => ({
     lines: [
