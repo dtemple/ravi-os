@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { commands, CLEAR_SENTINEL } from "@/lib/commands";
 
 const BOOT_LINES = [
   "BOOTING RAVI-OS...",
@@ -154,11 +155,27 @@ export default function Terminal() {
     if (cmd === "") {
       setLines((prev) => [...prev, ">"]);
     } else {
-      setLines((prev) => [
-        ...prev,
-        `> ${cmd}`,
-        `command not found: ${cmd}`,
-      ]);
+      const tokens = cmd.split(/\s+/);
+      const name = tokens[0].toLowerCase();
+      const args = tokens.slice(1);
+      const handler = commands[name];
+
+      if (handler) {
+        const result = handler(args);
+        if (result === CLEAR_SENTINEL) {
+          setLines([]);
+        } else {
+          const output = Array.isArray(result) ? result : [result];
+          setLines((prev) => [...prev, `> ${cmd}`, ...output]);
+        }
+      } else {
+        setLines((prev) => [
+          ...prev,
+          `> ${cmd}`,
+          `command not found: ${name}`,
+        ]);
+      }
+
       setHistory((prev) => [...prev, cmd]);
     }
 
