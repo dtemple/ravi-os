@@ -39,7 +39,7 @@ export default function Terminal() {
     bootingRef.current = false;
     setBooting(false);
     if (skip) {
-      sessionStorage.setItem("ravios-booted", "true");
+      localStorage.setItem("ravios-booted", "true");
       setTimeout(() => inputRef.current?.focus(), 0);
     } else {
       setLines((prev) => [
@@ -71,8 +71,19 @@ export default function Terminal() {
   }, []);
 
   useEffect(() => {
-    if (sessionStorage.getItem("ravios-booted")) {
-      inputRef.current?.focus();
+    const navType = (
+      performance.getEntriesByType("navigation")[0] as
+        | PerformanceNavigationTiming
+        | undefined
+    )?.type;
+
+    if (navType === "reload") {
+      localStorage.removeItem("ravios-booted");
+    }
+
+    if (navType !== "reload" && localStorage.getItem("ravios-booted")) {
+      setLines(["WELCOME BACK, AGENT RMP.", "Connection re-established."]);
+      setTimeout(() => inputRef.current?.focus(), 0);
       return;
     }
 
@@ -142,7 +153,7 @@ export default function Terminal() {
 
   function enterNormalMode() {
     setConfirming(false);
-    sessionStorage.setItem("ravios-booted", "true");
+    localStorage.setItem("ravios-booted", "true");
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
