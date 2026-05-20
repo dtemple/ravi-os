@@ -1,15 +1,46 @@
 @import "tailwindcss";
 
+/* ── Page ─────────────────────────────────────────────────────────────────── */
+
 body {
-  background: black;
+  background: #0a0a0a;
 }
 
-/* CRT scanline overlay */
-body::before {
+/* Page vignette — the "room" gets darker at the edges */
+body::after {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+
+/* ── Frame ────────────────────────────────────────────────────────────────── */
+
+.terminal-frame {
+  position: relative;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  box-shadow:
+    0 0 12px rgba(74, 222, 128, 0.12),
+    0 0 32px rgba(74, 222, 128, 0.06);
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  /* scanlines live inside the frame */
+  overflow: hidden;
+}
+
+/* CRT scanlines — clipped to the frame */
+.terminal-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 10;
   pointer-events: none;
   background: repeating-linear-gradient(
     to bottom,
@@ -20,33 +51,58 @@ body::before {
   );
 }
 
-/* Vignette — darkens corners */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 55%,
-    rgba(0, 0, 0, 0.65) 100%
-  );
+/* ── Title bar ────────────────────────────────────────────────────────────── */
+
+.terminal-titlebar {
+  height: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(74, 222, 128, 0.2);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(74, 222, 128, 0.5);
+  flex-shrink: 0;
 }
 
-/* CRT text glow on green terminal text */
+.terminal-titlebar-label {
+  user-select: none;
+}
+
+.terminal-titlebar-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.terminal-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.8);
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* ── Terminal body ────────────────────────────────────────────────────────── */
+
+/* CRT text glow */
 .terminal-glow {
   text-shadow:
     0 0 4px rgba(74, 222, 128, 0.6),
     0 0 10px rgba(74, 222, 128, 0.2);
 }
 
-/* Responsive font scaling */
-@media (max-width: 480px) {
-  .terminal-glow {
-    font-size: 12px;
-  }
-}
+/* ── Animations ───────────────────────────────────────────────────────────── */
 
 @keyframes terminal-shake {
   0%,  100% { transform: translateX(0); }
@@ -60,4 +116,18 @@ body::after {
 
 .terminal-shake {
   animation: terminal-shake 0.6s ease-in-out;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .terminal-titlebar {
+    height: 28px;
+    min-height: 28px;
+    font-size: 9px;
+  }
+
+  .terminal-glow {
+    font-size: 12px;
+  }
 }

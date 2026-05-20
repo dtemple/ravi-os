@@ -293,10 +293,10 @@ export default function Terminal() {
 
   return (
     <div
-      className={`flex flex-col h-screen bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}`}
+      className={`flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}`}
       onClick={handleContainerClick}
     >
-      <div className="flex-1 overflow-y-auto pb-2">
+      <div className="flex-1 overflow-y-auto pb-2 min-h-0">
         {lines.map((line, i) => (
           <div key={i} className="whitespace-pre-wrap leading-relaxed">
             {line}
