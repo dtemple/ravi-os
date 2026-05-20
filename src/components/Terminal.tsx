@@ -32,10 +32,15 @@ export default function Terminal() {
   const [raviActivated, setRaviActivated] = useState(false);
   const [kavirRunning, setKavirRunning] = useState(false);
   const [kavirActivated, setKavirActivated] = useState(false);
+  const [wizardRunning, setWizardRunning] = useState(false);
+  const [wizardActivated, setWizardActivated] = useState(false);
+  const [wizardEnchanted, setWizardEnchanted] = useState(false);
+  const [wizardPrompt, setWizardPrompt] = useState("wizard@ravios:~$");
   const [typewriting, setTypewriting] = useState(false);
   const [raviFlicker, setRaviFlicker] = useState(false);
   const [kavirFlicker, setKavirFlicker] = useState(false);
-  const [glyphRain, setGlyphRain] = useState<{ id: number; x: number; y: number; glyph: string; delay: number; size: number; scheme: "ravi" | "kavir" }[]>([]);
+  const [wizardFlicker, setWizardFlicker] = useState(false);
+  const [glyphRain, setGlyphRain] = useState<{ id: number; x: number; y: number; glyph: string; delay: number; size: number; scheme: "ravi" | "kavir" | "wizard" }[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -45,6 +50,7 @@ export default function Terminal() {
   const typewritingRef = useRef(false);
   const typewriterAbortRef = useRef<AbortController | null>(null);
   const raviActivatedRef = useRef(false);
+  const kavirActivatedRef = useRef(false);
 
   function completeBoot(skip = false) {
     bootingRef.current = false;
@@ -392,8 +398,131 @@ export default function Terminal() {
       add("CREATIVITY LEVELS INCREASING.");
     }
 
+    kavirActivatedRef.current = true;
     setKavirActivated(true);
     setKavirRunning(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  async function runWizard() {
+    setWizardRunning(true);
+
+    const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+    const add = (line: string) => setLines((prev) => [...prev, line]);
+
+    // Preamble — build dread before the entity responds
+    add("...");
+    await pause(600);
+    add("...");
+    await pause(700);
+    add("SIGNAL DETECTED");
+    await pause(900);
+    add("ESTABLISHING ARCANE CONNECTION…");
+    await pause(1000);
+    add("WARNING: UNKNOWN ENTITY RESPONDING");
+    await pause(700);
+
+    // Dramatic activation: emerald/white burst + shake + long glyph rain
+    setWizardFlicker(true);
+    setTimeout(() => setWizardFlicker(false), 1600);
+    triggerShake();
+
+    const BASE_GLYPHS = ["✨", "⚡", "▲", "◆", "◉", "▓", "▒", "░", "/", "\\"];
+    const RARE_GLYPHS = ["SCII", "RMP"];
+    const ALL_GLYPHS = [...BASE_GLYPHS, ...BASE_GLYPHS, ...BASE_GLYPHS, ...RARE_GLYPHS];
+    setGlyphRain(
+      Array.from({ length: 35 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 96,
+        y: Math.random() * 96,
+        glyph: ALL_GLYPHS[Math.floor(Math.random() * ALL_GLYPHS.length)],
+        delay: Math.random() * 800,
+        size: 9 + Math.random() * 9,
+        scheme: "wizard" as const,
+      }))
+    );
+    setTimeout(() => setGlyphRain([]), 3500);
+
+    await pause(600);
+    add("");
+    await pause(400);
+
+    // Original wizard content preserved
+    add("SCANNING AGENT ID...");
+    await pause(500);
+    add("");
+    add("AGENT RMP VERIFIED");
+    await pause(500);
+    add("");
+    add("ARCANE TERMINAL LINK ESTABLISHED");
+    await pause(500);
+    add("");
+    add("REALITY EDIT MODE ENABLED");
+    await pause(700);
+    add("");
+
+    // ASCII wizard — full reveal at once, then let it land
+    setLines((prev) => [
+      ...prev,
+      "                          /\\",
+      "                         /  \\",
+      "                        / /\\ \\",
+      "                       / /  \\ \\",
+      "                      /_/____\\_\\",
+      "                         ||||",
+      "                     .-\"\"\"\"\"\"-.",
+      "                   .'  .--.    '.",
+      "                  /   /    \\     \\",
+      "                 |   | 0  0 |    |",
+      "                 |   |  --  |    |",
+      "                 |   | \\__/ |    |",
+      "                  \\   \\____/    /",
+      '               .-".__________."-.',
+      "              /  / /  ||  \\ \\   \\",
+      "             /__/ /___||___\\_\\___\\",
+      "                /____/  \\____\\",
+    ]);
+    await pause(900);
+
+    // Wizard speech
+    add("");
+    add('  "Greetings, Agent RMP.');
+    await pause(300);
+    add("");
+    add("   The builders have been expecting you.");
+    await pause(300);
+    add("");
+    add("   Most humans scroll.");
+    await pause(200);
+    add("   A few learn to build.");
+    await pause(300);
+    add("");
+    add('   The internet is now yours to shape."');
+
+    // Long earned pause — then enchanted mode activates and the transmission arrives
+    await pause(2500);
+    setWizardEnchanted(true);
+    setTimeout(() => setWizardEnchanted(false), 20000);
+
+    await pause(500);
+    add("");
+    add('"The internet is not fixed.');
+    await pause(300);
+    add('It is programmable."');
+    await pause(1500);
+    add("");
+    add('"Build wisely, Agent RMP."');
+
+    // Determine prompt based on which agents have activated this session
+    const ravi = raviActivatedRef.current;
+    const kavir = kavirActivatedRef.current;
+    const prompt =
+      ravi && kavir ? "dual-agent-wizard@ravios:~$" :
+      ravi           ? "agent-rmp@wizard-terminal:~$" :
+                       "wizard@ravios:~$";
+    setWizardPrompt(prompt);
+    setWizardActivated(true);
+    setWizardRunning(false);
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
@@ -506,7 +635,7 @@ export default function Terminal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (hacking || raviRunning || kavirRunning || confirming || typewriting) return;
+    if (hacking || raviRunning || kavirRunning || wizardRunning || confirming || typewriting) return;
     const cmd = input.trim();
 
     if (cmd === "") {
@@ -536,6 +665,9 @@ export default function Terminal() {
             } else if (effect === "kavir") {
               setLines((prev) => [...prev, `> ${cmd}`]);
               runKavir();
+            } else if (effect === "wizard") {
+              setLines((prev) => [...prev, `> ${cmd}`]);
+              runWizard();
             } else {
               setLines((prev) => [...prev, `> ${cmd}`, ...out]);
               if (effect === "shake") triggerShake();
@@ -562,7 +694,7 @@ export default function Terminal() {
 
   return (
     <div
-      className={`relative flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}${raviFlicker ? " terminal-ravi-flicker" : ""}${kavirFlicker ? " terminal-kavir-sync" : ""}`}
+      className={`relative flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}${raviFlicker ? " terminal-ravi-flicker" : ""}${kavirFlicker ? " terminal-kavir-sync" : ""}${wizardFlicker ? " terminal-wizard-flicker" : ""}${wizardEnchanted ? " terminal-wizard-enchanted" : ""}`}
       onClick={handleContainerClick}
     >
       {glyphRain.length > 0 && (
@@ -577,6 +709,8 @@ export default function Terminal() {
                 animationDelay: `${delay}ms`,
                 color: scheme === "kavir"
                   ? (id % 3 === 0 ? "#22d3ee" : id % 3 === 1 ? "#67e8f9" : "#4ade80")
+                  : scheme === "wizard"
+                  ? (id % 3 === 0 ? "#34d399" : id % 3 === 1 ? "#fbbf24" : "#6ee7b7")
                   : (id % 3 === 0 ? "#fbbf24" : id % 3 === 1 ? "#fde68a" : "#4ade80"),
                 fontSize: `${size}px`,
               }}
@@ -596,9 +730,9 @@ export default function Terminal() {
         <div ref={bottomRef} />
       </div>
 
-      {!booting && !hacking && !raviRunning && !kavirRunning && !typewriting && (
+      {!booting && !hacking && !raviRunning && !kavirRunning && !wizardRunning && !typewriting && (
         <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
-          <span className="select-none">{confirming ? "" : kavirActivated ? "agent-rmp+kavir@ravios:~$" : raviActivated ? "agent-rmp@ravios:~$" : ">"}</span>
+          <span className="select-none">{confirming ? "" : wizardActivated ? wizardPrompt : kavirActivated ? "agent-rmp+kavir@ravios:~$" : raviActivated ? "agent-rmp@ravios:~$" : ">"}</span>
           <div className="relative flex-1">
             <input
               ref={inputRef}

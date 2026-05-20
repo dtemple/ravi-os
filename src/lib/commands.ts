@@ -2,7 +2,7 @@ import confetti from "canvas-confetti";
 
 export const CLEAR_SENTINEL = "__CLEAR__";
 
-export type CommandEffect = "shake" | "hacking" | "ravi" | "kavir";
+export type CommandEffect = "shake" | "hacking" | "ravi" | "kavir" | "wizard";
 
 export type CommandOutput =
   | { lines: string[]; effect?: CommandEffect }
@@ -358,40 +358,8 @@ export const commands: Record<string, Handler> = {
     return "🎉";
   },
 
-  wizard: () => [
-    "SCANNING AGENT ID...",
-    "",
-    "AGENT RMP VERIFIED",
-    "",
-    "ARCANE TERMINAL LINK ESTABLISHED",
-    "",
-    "REALITY EDIT MODE ENABLED",
-    "",
-    "                          /\\",
-    "                         /  \\",
-    "                        / /\\ \\",
-    "                       / /  \\ \\",
-    "                      /_/____\\_\\",
-    "                         ||||",
-    "                     .-\"\"\"\"\"\"-.",
-    "                   .'  .--.    '.",
-    "                  /   /    \\     \\",
-    "                 |   | 0  0 |    |",
-    "                 |   |  --  |    |",
-    "                 |   | \\__/ |    |",
-    "                  \\   \\____/    /",
-    '               .-".__________."-.',
-    "              /  / /  ||  \\ \\   \\",
-    "             /__/ /___||___\\_\\___\\",
-    "                /____/  \\____\\",
-    "",
-    '  "Greetings, Agent RMP.',
-    "",
-    "   The builders have been expecting you.",
-    "",
-    "   Most humans scroll.",
-    "   A few learn to build.",
-    "",
-    '   The internet is now yours to shape."',
-  ],
+  wizard: (): CommandOutput => ({
+    lines: [],
+    effect: "wizard",
+  }),
 };
