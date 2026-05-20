@@ -1,5 +1,11 @@
 # RaviOS — Project Context
 
+## Naming
+
+Always write the product name as **RaviOS** (or **Ravi-OS** / **RAVI-OS** in all-caps contexts). Never write it as "RAVIOS" (no separator) or "ravios" — both are unreadable.
+
+
+
 RaviOS is a playful, mysterious, terminal-inspired web portal designed for a sixth grader (Ravi / Agent RMP) who is beginning a short "vibe coding" course about building things on the internet.
 
 This is NOT meant to feel like school, curriculum software, or a coding bootcamp.
