@@ -2,17 +2,116 @@
 
 import { useEffect, useRef, useState } from "react";
 
+const BOOT_LINES = [
+  "BOOTING RAVI-OS...",
+  "",
+  "SECURE CONNECTION ESTABLISHED",
+  "",
+  "WELCOME, AGENT RMP.",
+  "",
+  "WE'VE BEEN EXPECTING YOU.",
+  "",
+  "Your mission, should you choose to accept it:",
+  "Build things on the internet.",
+  "",
+  "Current level: HUMAN",
+  "Target level: WIZARD",
+];
+
 export default function Terminal() {
   const [lines, setLines] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
+  const [booting, setBooting] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const bootingRef = useRef(false);
+  const skipRef = useRef(false);
+  const wakeUpRef = useRef<(() => void) | null>(null);
+
+  function completeBoot() {
+    bootingRef.current = false;
+    setBooting(false);
+    sessionStorage.setItem("ravios-booted", "true");
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  function triggerSkip() {
+    if (!bootingRef.current) return;
+    skipRef.current = true;
+    wakeUpRef.current?.();
+    setLines(BOOT_LINES);
+    completeBoot();
+  }
+
+  // Global keydown skip during boot
+  useEffect(() => {
+    function onKey() {
+      triggerSkip();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    if (sessionStorage.getItem("ravios-booted")) {
+      inputRef.current?.focus();
+      return;
+    }
+
+    bootingRef.current = true;
+    setBooting(true);
+
+    function sleep(ms: number): Promise<void> {
+      return new Promise((resolve) => {
+        if (skipRef.current) { resolve(); return; }
+        const id = setTimeout(resolve, ms);
+        wakeUpRef.current = () => { clearTimeout(id); resolve(); };
+      });
+    }
+
+    async function runBoot() {
+      for (let i = 0; i < BOOT_LINES.length; i++) {
+        if (skipRef.current) return;
+
+        const line = BOOT_LINES[i];
+        // Dramatic pause before WELCOME; short initial delay; normal gap between lines
+        const pauseMs = i === 0 ? 200 : line === "WELCOME, AGENT RMP." ? 900 : 400;
+        await sleep(pauseMs);
+        if (skipRef.current) return;
+
+        if (line === "") {
+          setLines((prev) => [...prev, ""]);
+          continue;
+        }
+
+        setLines((prev) => [...prev, ""]);
+        for (let c = 0; c < line.length; c++) {
+          if (skipRef.current) return;
+          await sleep(25);
+          if (skipRef.current) return;
+          setLines((prev) => {
+            const next = [...prev];
+            next[next.length - 1] = line.slice(0, c + 1);
+            return next;
+          });
+        }
+      }
+
+      if (!skipRef.current) completeBoot();
+    }
+
+    runBoot();
+
+    return () => {
+      skipRef.current = true;
+      wakeUpRef.current?.();
+      bootingRef.current = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -20,6 +119,10 @@ export default function Terminal() {
   }, [lines]);
 
   function handleContainerClick() {
+    if (bootingRef.current) {
+      triggerSkip();
+      return;
+    }
     inputRef.current?.focus();
   }
 
@@ -77,28 +180,30 @@ export default function Terminal() {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
-        <span className="select-none">&gt;</span>
-        <div className="relative flex-1">
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-full bg-transparent outline-none caret-transparent text-green-400"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck={false}
-          />
-          <span
-            className="absolute top-0 pointer-events-none animate-pulse"
-            style={{ left: `${input.length}ch` }}
-          >
-            ▋
-          </span>
-        </div>
-      </form>
+      {!booting && (
+        <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
+          <span className="select-none">&gt;</span>
+          <div className="relative flex-1">
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full bg-transparent outline-none caret-transparent text-green-400"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+            />
+            <span
+              className="absolute top-0 pointer-events-none animate-pulse"
+              style={{ left: `${input.length}ch` }}
+            >
+              ▋
+            </span>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
