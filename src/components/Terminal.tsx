@@ -28,6 +28,10 @@ export default function Terminal() {
   const [confirming, setConfirming] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [hacking, setHacking] = useState(false);
+  const [raviRunning, setRaviRunning] = useState(false);
+  const [raviActivated, setRaviActivated] = useState(false);
+  const [raviFlicker, setRaviFlicker] = useState(false);
+  const [glyphRain, setGlyphRain] = useState<{ id: number; x: number; y: number; glyph: string; delay: number; size: number }[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -222,6 +226,71 @@ export default function Terminal() {
     }
   }
 
+  async function runRavi() {
+    setRaviRunning(true);
+
+    // Flicker: green → gold → settle back, 1.4s
+    setRaviFlicker(true);
+    setTimeout(() => setRaviFlicker(false), 1400);
+
+    // Glyph rain: 25 random glyphs, fade out over 2.5s
+    const GLYPHS = ["✨", "⚡", "◆", "◉", "▲", "▓", "▒", "░", "R", "M", "P"];
+    setGlyphRain(
+      Array.from({ length: 25 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 96,
+        y: Math.random() * 96,
+        glyph: GLYPHS[Math.floor(Math.random() * GLYPHS.length)],
+        delay: Math.random() * 600,
+        size: 10 + Math.random() * 8,
+      }))
+    );
+    setTimeout(() => setGlyphRain([]), 2500);
+
+    const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+    const add = (line: string) => setLines((prev) => [...prev, line]);
+
+    add("SEARCHING AGENT DATABASE...");
+    await pause(700);
+    add("");
+    await pause(900);
+    add("⚠ UNUSUAL RESULT DETECTED ⚠");
+    await pause(1300);
+    add("");
+    add("AGENT RMP IDENTIFIED.");
+    await pause(900);
+    add("");
+    add("CHILD PRODIGY DETECTED.");
+    await pause(300);
+    add("CLEARANCE LEVEL: MAXIMUM.");
+    await pause(700);
+    add("");
+    add("Status: BUILDER.");
+    await pause(200);
+    add("Status: CREATOR.");
+    await pause(200);
+    add("Status: WIZARD (training).");
+    await pause(800);
+    add("");
+    add("The system has been expecting you.");
+    await pause(700);
+    add("");
+    add("Most users discover RaviOS.");
+    await pause(500);
+    add("");
+    add("You were meant to find it.");
+    await pause(1000);
+    add("");
+    add("Welcome home, Agent RMP.");
+    await pause(500);
+    add("");
+    add("Hidden pathways unlocked.");
+
+    setRaviActivated(true);
+    setRaviRunning(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
   async function runHacking(label: string) {
     setHacking(true);
     const deadline = Date.now() + 2500;
@@ -258,7 +327,7 @@ export default function Terminal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (hacking || confirming) return;
+    if (hacking || raviRunning || confirming) return;
     const cmd = input.trim();
 
     if (cmd === "") {
@@ -279,6 +348,9 @@ export default function Terminal() {
           if (effect === "hacking") {
             setLines((prev) => [...prev, `> ${cmd}`]);
             runHacking(cmd);
+          } else if (effect === "ravi") {
+            setLines((prev) => [...prev, `> ${cmd}`]);
+            runRavi();
           } else {
             setLines((prev) => [...prev, `> ${cmd}`, ...out]);
             if (effect === "shake") triggerShake();
@@ -304,9 +376,29 @@ export default function Terminal() {
 
   return (
     <div
-      className={`flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}`}
+      className={`relative flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}${raviFlicker ? " terminal-ravi-flicker" : ""}`}
       onClick={handleContainerClick}
     >
+      {glyphRain.length > 0 && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+          {glyphRain.map(({ id, x, y, glyph, delay, size }) => (
+            <span
+              key={id}
+              className="absolute terminal-glyph-rain"
+              style={{
+                left: `${x}%`,
+                top: `${y}%`,
+                animationDelay: `${delay}ms`,
+                color: id % 3 === 0 ? "#fbbf24" : id % 3 === 1 ? "#fde68a" : "#4ade80",
+                fontSize: `${size}px`,
+              }}
+            >
+              {glyph}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto pb-2 min-h-0">
         {lines.map((line, i) => (
           <div key={i} className="whitespace-pre-wrap leading-relaxed">
@@ -316,9 +408,9 @@ export default function Terminal() {
         <div ref={bottomRef} />
       </div>
 
-      {!booting && !hacking && (
+      {!booting && !hacking && !raviRunning && (
         <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
-          <span className="select-none">{confirming ? "" : ">"}</span>
+          <span className="select-none">{confirming ? "" : raviActivated ? "agent-rmp@ravios:~$" : ">"}</span>
           <div className="relative flex-1">
             <input
               ref={inputRef}

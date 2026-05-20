@@ -2,7 +2,7 @@ import confetti from "canvas-confetti";
 
 export const CLEAR_SENTINEL = "__CLEAR__";
 
-export type CommandEffect = "shake" | "hacking";
+export type CommandEffect = "shake" | "hacking" | "ravi";
 
 export type CommandOutput = {
   lines: string[];
@@ -315,23 +315,10 @@ export const commands: Record<string, Handler> = {
     return [line1, line2];
   },
 
-  ravi: () => [
-    "ACCESSING AGENT DIRECTORY…",
-    "",
-    "MATCH FOUND.",
-    "",
-    "AGENT RMP IDENTIFIED.",
-    "  Clearance level: MAXIMUM.",
-    "  Status: BUILDER.",
-    "  Status: CREATOR.",
-    "  Status: WIZARD (training).",
-    "",
-    "The system has been expecting you.",
-    "Most users arrive here by accident.",
-    "You were meant to find it.",
-    "",
-    "Welcome home, Agent RMP.",
-  ],
+  ravi: (): CommandOutput => ({
+    lines: [],
+    effect: "ravi",
+  }),
 
   kavir: () => [
     "SEARCHING KNOWN ASSOCIATES…",
