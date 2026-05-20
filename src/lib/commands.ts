@@ -70,6 +70,65 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// ── Egg tracking ─────────────────────────────────────────────────────────────
+
+export const EGG_NAMES = [
+  "summon dragon",
+  "ravi",
+  "kavir",
+  "hack the mainframe",
+  "confetti",
+] as const;
+
+export type EggName = (typeof EGG_NAMES)[number];
+
+const EGG_SET = new Set<string>(EGG_NAMES);
+const EGGS_KEY = "ravios-found-eggs";
+
+export function isEggName(name: string): name is EggName {
+  return EGG_SET.has(name);
+}
+
+function getFoundEggs(): EggName[] {
+  try {
+    return JSON.parse(sessionStorage.getItem(EGGS_KEY) ?? "[]") as EggName[];
+  } catch {
+    return [];
+  }
+}
+
+export function markFoundEgg(name: EggName): void {
+  const found = getFoundEggs();
+  if (!found.includes(name)) {
+    sessionStorage.setItem(EGGS_KEY, JSON.stringify([...found, name]));
+  }
+}
+
+// ── Hint rhymes ───────────────────────────────────────────────────────────────
+
+const HINT_RHYMES: Record<EggName, [string, string]> = {
+  "summon dragon": [
+    "Scales of fire, wings unfurled.",
+    "SUMMON the beast from another world.",
+  ],
+  ravi: [
+    "The system waits in emerald light.",
+    "Type your true name. Unlock the night.",
+  ],
+  kavir: [
+    "Not all agents walk alone.",
+    "Call your brother. Bring him home.",
+  ],
+  "hack the mainframe": [
+    "The fortress hums, the data sleeps.",
+    "HACK the MAINFRAME. Wake what it keeps.",
+  ],
+  confetti: [
+    "Even green screens love a show.",
+    "Throw CONFETTI. Make it glow.",
+  ],
+};
+
 export const commands: Record<string, Handler> = {
   help: () => [
     "AVAILABLE COMMANDS",
@@ -83,7 +142,7 @@ export const commands: Record<string, Handler> = {
     "  family   — known associates report",
     "  wizard   — summon the ASCII wizard",
     "──────────────────────────────────────",
-    "...there may be more commands hidden in the system.",
+    "...there may be more… try hint",
   ],
 
   clear: () => CLEAR_SENTINEL,
@@ -219,6 +278,56 @@ export const commands: Record<string, Handler> = {
     "All associates are aware of RaviOS.",
     "Most believe it is harmless.",
     "They are probably wrong.",
+  ],
+
+  hint: () => {
+    const found = getFoundEggs();
+    const remaining = EGG_NAMES.filter((n) => !found.includes(n));
+    if (remaining.length === 0) {
+      return "You've found them all, agent. The system has no more secrets… for now.";
+    }
+    const egg = pick(remaining);
+    const [line1, line2] = HINT_RHYMES[egg];
+    return [line1, line2];
+  },
+
+  ravi: () => [
+    "ACCESSING AGENT DIRECTORY…",
+    "",
+    "MATCH FOUND.",
+    "",
+    "AGENT RMP IDENTIFIED.",
+    "  Clearance level: MAXIMUM.",
+    "  Status: BUILDER.",
+    "  Status: CREATOR.",
+    "  Status: WIZARD (training).",
+    "",
+    "The system has been expecting you.",
+    "Most users arrive here by accident.",
+    "You were meant to find it.",
+    "",
+    "Welcome home, Agent RMP.",
+  ],
+
+  kavir: () => [
+    "SEARCHING KNOWN ASSOCIATES…",
+    "",
+    "LINK ESTABLISHED.",
+    "",
+    "KNOWN ASSOCIATE: AGENT KAVIR.",
+    "  Status: FIELD-ACTIVE.",
+    "  Clearance: ELEVATED.",
+    "  Primary skills detected:",
+    "    * musical synchronization",
+    "    * mountain operations",
+    "    * advanced ski buddy protocols",
+    "",
+    "  Mission status: ongoing.",
+    "  Full details unavailable.",
+    "",
+    "  Note:",
+    "  Agents RMP and KAVIR perform better in co-op mode.",
+    "  Do not underestimate either of them.",
   ],
 
   "summon dragon": (): CommandOutput => ({

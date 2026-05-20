@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { commands, CLEAR_SENTINEL, randomGibberish, type CommandOutput } from "@/lib/commands";
+import { commands, CLEAR_SENTINEL, randomGibberish, isEggName, markFoundEgg, type CommandOutput } from "@/lib/commands";
 
 const BOOT_LINES = [
   "BOOTING RAVI-OS...",
@@ -193,11 +193,13 @@ export default function Terminal() {
       setLines((prev) => [...prev, ">"]);
     } else {
       const normalized = cmd.toLowerCase();
-      const handler = commands[normalized] ?? commands[normalized.split(/\s+/)[0]];
+      const resolvedName = commands[normalized] ? normalized : normalized.split(/\s+/)[0];
+      const handler = commands[resolvedName];
       const displayName = normalized.split(/\s+/)[0];
 
       if (handler) {
-        const result = handler(normalized.split(/\s+/).slice(commands[normalized] ? 0 : 1));
+        if (isEggName(resolvedName)) markFoundEgg(resolvedName);
+        const result = handler(normalized.split(/\s+/).slice(resolvedName === normalized ? 0 : 1));
         if (result === CLEAR_SENTINEL) {
           setLines([]);
         } else if (typeof result === "object" && !Array.isArray(result) && "lines" in result) {
