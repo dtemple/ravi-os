@@ -33,6 +33,7 @@ body::after {
   flex-direction: column;
   /* scanlines live inside the frame */
   overflow: hidden;
+  height: min(720px, calc(100vh - 24px));
 }
 
 /* CRT scanlines — clipped to the frame */
@@ -121,6 +122,11 @@ body::after {
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
+  .terminal-frame {
+    height: calc(100vh - 24px); /* fallback for browsers without dvh */
+    height: calc(100dvh - 24px);
+  }
+
   .terminal-titlebar {
     height: 28px;
     min-height: 28px;

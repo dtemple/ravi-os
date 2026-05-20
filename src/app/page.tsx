@@ -5,7 +5,7 @@ export default function Home() {
     <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-3 sm:p-6">
       <div
         className="terminal-frame w-full"
-        style={{ maxWidth: 960, height: "min(720px, calc(100vh - 24px))" }}
+        style={{ maxWidth: 960 }}
       >
         {/* Title bar */}
         <div className="terminal-titlebar">
