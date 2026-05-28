@@ -17,6 +17,10 @@ const BOOT_LINES = [
   "",
   "Current level: HUMAN",
   "Target level: WIZARD",
+  "",
+  "  [✓] MISSION 0 — UNLOCK THE TOOLS         COMPLETE",
+  "  [▶] MISSION 1 — BUILD YOUR BASE          IN PROGRESS  (target: Llama Parade)",
+  "  [ ] MISSION 2 — CREATE SOMETHING WEIRD   LOCKED",
 ];
 
 export default function Terminal() {
@@ -100,7 +104,16 @@ export default function Terminal() {
     }
 
     if (navType !== "reload" && localStorage.getItem("ravios-booted")) {
-      setLines(["WELCOME BACK, AGENT RMP.", "Connection re-established."]);
+      setLines([
+        "WELCOME BACK, AGENT RMP.",
+        "Connection re-established.",
+        "",
+        "  [✓] MISSION 0  COMPLETE",
+        "  [▶] MISSION 1  IN PROGRESS — target: Llama Parade",
+        "  [ ] MISSION 2  LOCKED",
+        "",
+        "Type 'mission 1' for the briefing.",
+      ]);
       setTimeout(() => inputRef.current?.focus(), 0);
       return;
     }
