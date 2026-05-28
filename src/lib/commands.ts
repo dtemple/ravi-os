@@ -412,11 +412,6 @@ export const commands: Record<string, Handler> = {
         "🦙🎺 LLAMA PARADE: FULL DEPLOYMENT 🎺🦙",
         "",
         "   🦙  🎺  🦙  🥁  🦙  🎸  🦙  🎤  🦙",
-        "",
-        "  The llamas are forming a band.",
-        "  They are calling it… LLAMA PARADE.",
-        "",
-        "  (you may already be in this band)",
       ],
     ];
     const out = pick(parades);
