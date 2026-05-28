@@ -132,12 +132,13 @@ export const commands: Record<string, Handler> = {
   help: () => [
     "AVAILABLE COMMANDS",
     "──────────────────────────────────────",
+    "  mission  — list missions (or: mission 0/1/2)",
+    "  level    — check your current wizard level",
     "  help     — show this list",
     "  clear    — clear the terminal",
-    "  level    — check your current wizard level",
-    "  mission  — list missions (or: mission 0/1/2)",
     "  joke     — hear a programmer joke",
     "  family   — known associates report",
+    "  llama    — deploy a llama (use with caution)",
     "  wizard   — summon the ASCII wizard",
     "──────────────────────────────────────",
     "...there may be more… try hint",
@@ -373,6 +374,54 @@ export const commands: Record<string, Handler> = {
   confetti: () => {
     confetti({ particleCount: 120, spread: 80, origin: { y: 0.9 } });
     return "🎉";
+  },
+
+  llama: () => {
+    const parades = [
+      [
+        "🦙 INCOMING LLAMA PARADE 🦙",
+        "",
+        "        ,;;;;;,           ,;;;;;,           ,;;;;;,",
+        "       ;;;;;;;;;         ;;;;;;;;;         ;;;;;;;;;",
+        "       ;  o   o ;        ;  o   o ;        ;  o   o ;",
+        "        \\   ^  /          \\   ^  /          \\   ^  /",
+        "         |||||              |||||              |||||",
+        "        /|||||\\            /|||||\\            /|||||\\",
+        "       /_|||||_\\          /_|||||_\\          /_|||||_\\",
+        "",
+        "  Three llamas have entered the terminal.",
+        "  They appear to be looking for a band.",
+        "",
+        "  > llamaparade.com is now 0.7% more real.",
+      ],
+      [
+        "🦙 LLAMA SPOTTED 🦙",
+        "",
+        "         ,;;;;;,",
+        "        ;;;;;;;;;",
+        "        ;  -   - ;     'sup, agent.'",
+        "         \\   o  /",
+        "          |||||",
+        "         /|||||\\",
+        "        /_|||||_\\",
+        "",
+        "  This llama is judging your code.",
+        "  It is also vibing.",
+      ],
+      [
+        "🦙🎺 LLAMA PARADE: FULL DEPLOYMENT 🎺🦙",
+        "",
+        "   🦙  🎺  🦙  🥁  🦙  🎸  🦙  🎤  🦙",
+        "",
+        "  The llamas are forming a band.",
+        "  They are calling it… LLAMA PARADE.",
+        "",
+        "  (you may already be in this band)",
+      ],
+    ];
+    const out = pick(parades);
+    confetti({ particleCount: 80, spread: 100, origin: { y: 0.8 }, colors: ["#fbbf24", "#f472b6", "#4ade80", "#22d3ee"] });
+    return out;
   },
 
   wizard: (): CommandOutput => ({

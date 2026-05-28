@@ -4,19 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { commands, CLEAR_SENTINEL, randomGibberish, isEggName, markFoundEgg, type CommandOutput } from "@/lib/commands";
 
 const BOOT_LINES = [
-  "BOOTING RAVI-OS...",
-  "",
-  "SECURE CONNECTION ESTABLISHED",
-  "",
-  "WELCOME, AGENT RMP.",
-  "",
-  "WE'VE BEEN EXPECTING YOU.",
-  "",
-  "Your mission, should you choose to accept it:",
-  "Build things on the internet.",
-  "",
-  "Current level: HUMAN",
-  "Target level: WIZARD",
+  "WELCOME BACK, AGENT RMP.",
   "",
   "  [✓] MISSION 0 — UNLOCK THE TOOLS         COMPLETE",
   "  [▶] MISSION 1 — BUILD YOUR BASE          IN PROGRESS  (target: Llama Parade)",
@@ -134,8 +122,9 @@ export default function Terminal() {
         if (skipRef.current) return;
 
         const line = BOOT_LINES[i];
-        // Dramatic pause before WELCOME; short initial delay; normal gap between lines
-        const pauseMs = i === 0 ? 200 : line === "WELCOME, AGENT RMP." ? 900 : 400;
+        const isIntro = line === "WELCOME BACK, AGENT RMP.";
+        // Fast welcome; normal gap for the mission status block
+        const pauseMs = i === 0 ? 80 : isIntro ? 120 : 400;
         await sleep(pauseMs);
         if (skipRef.current) return;
 
@@ -144,10 +133,11 @@ export default function Terminal() {
           continue;
         }
 
+        const charMs = isIntro ? 10 : 25;
         setLines((prev) => [...prev, ""]);
         for (let c = 0; c < line.length; c++) {
           if (skipRef.current) return;
-          await sleep(25);
+          await sleep(charMs);
           if (skipRef.current) return;
           setLines((prev) => {
             const next = [...prev];
@@ -157,7 +147,13 @@ export default function Terminal() {
         }
       }
 
-      if (!skipRef.current) completeBoot(false);
+      if (skipRef.current) return;
+
+      const helpOutput = commands.help([]);
+      if (Array.isArray(helpOutput)) {
+        setLines((prev) => [...prev, "", ...helpOutput]);
+      }
+      completeBoot(true);
     }
 
     runBoot();
