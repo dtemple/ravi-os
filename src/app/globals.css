@@ -196,6 +196,122 @@ body::after {
   animation: wizard-enchant 3.5s ease-in-out infinite;
 }
 
+/* ── Hyperspace jump (hidden: use the force) ──────────────────────────────── */
+
+/* Terminal during the jump: dim → cool-blue shift, acceleration pulse + shake.
+   hue-rotate(+60deg) walks the emerald glow toward hologram blue. */
+@keyframes force-jump {
+  0%   { filter: brightness(1)    hue-rotate(0deg);  transform: translateX(0)    scale(1);    }
+  8%   { filter: brightness(0.2)  hue-rotate(20deg); transform: translateX(0)    scale(0.997);} /* dim */
+  20%  { filter: brightness(0.5)  hue-rotate(45deg); transform: translateX(-3px) scale(1.012);}
+  32%  { filter: brightness(2.4)  hue-rotate(60deg); transform: translateX(3px)  scale(1.022);} /* acceleration burst */
+  46%  { filter: brightness(0.8)  hue-rotate(58deg); transform: translateX(-2px) scale(1.006);}
+  60%  { filter: brightness(2.0)  hue-rotate(60deg); transform: translateX(2px)  scale(1.016);} /* pulse */
+  78%  { filter: brightness(1.2)  hue-rotate(58deg); transform: translateX(-1px) scale(1.004);}
+  100% { filter: brightness(1)    hue-rotate(56deg); transform: translateX(0)    scale(1);    }
+}
+
+.terminal-force-jump {
+  animation: force-jump 1.5s ease-in-out forwards;
+}
+
+/* Streaking stars — points stretch into lines and rip across the screen.
+   ease-in timing gives the rapid-acceleration feeling. */
+@keyframes hyperspace-streak {
+  0%   { transform: translateX(-35vw) scaleX(0.12); opacity: 0; }
+  12%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateX(110vw) scaleX(1);    opacity: 0; }
+}
+
+.hyperspace-streak {
+  position: absolute;
+  left: 0;
+  border-radius: 2px;
+  will-change: transform, opacity;
+  filter: blur(0.4px);
+  animation-name: hyperspace-streak;
+  animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.35);
+  animation-fill-mode: forwards;
+}
+
+/* Brief targeting reticle on arrival */
+@keyframes reticle-flash {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+  30%  { opacity: 1; transform: translate(-50%, -50%) scale(1);   }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.85);}
+}
+
+.force-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 84px;
+  height: 84px;
+  border: 1px solid rgba(125, 211, 252, 0.85);
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.5), inset 0 0 10px rgba(56, 189, 248, 0.3);
+  animation: reticle-flash 0.9s ease-out forwards;
+}
+
+.force-reticle::before,
+.force-reticle::after {
+  content: "";
+  position: absolute;
+  background: rgba(125, 211, 252, 0.85);
+}
+
+.force-reticle::before {
+  left: 50%;
+  top: -12px;
+  bottom: -12px;
+  width: 1px;
+  transform: translateX(-50%);
+}
+
+.force-reticle::after {
+  top: 50%;
+  left: -12px;
+  right: -12px;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+/* Persistent Jedi / hologram mode after the jump — green → cool blue.
+   Double class beats the single-class Tailwind text-green-400 utility. */
+.terminal-glow.terminal-jedi {
+  color: #7dd3fc;
+  text-shadow:
+    0 0 4px rgba(56, 189, 248, 0.6),
+    0 0 12px rgba(56, 189, 248, 0.25);
+  box-shadow:
+    inset 0 0 34px rgba(56, 189, 248, 0.08),
+    0 0 20px rgba(56, 189, 248, 0.12);
+}
+
+/* Faint lingering starfield + hologram drift, kept subtle. */
+.terminal-jedi::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgba(186, 230, 253, 0.5), transparent),
+    radial-gradient(1px 1px at 78% 14%, rgba(125, 211, 252, 0.45), transparent),
+    radial-gradient(1px 1px at 34% 67%, rgba(186, 230, 253, 0.4), transparent),
+    radial-gradient(1px 1px at 64% 82%, rgba(125, 211, 252, 0.4), transparent),
+    radial-gradient(1px 1px at 90% 55%, rgba(186, 230, 253, 0.35), transparent),
+    radial-gradient(1px 1px at 5% 88%, rgba(125, 211, 252, 0.35), transparent);
+  animation: jedi-twinkle 4s ease-in-out infinite;
+}
+
+@keyframes jedi-twinkle {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.7;  }
+}
+
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {

@@ -2,7 +2,7 @@ import confetti from "canvas-confetti";
 
 export const CLEAR_SENTINEL = "__CLEAR__";
 
-export type CommandEffect = "shake" | "hacking" | "ravi" | "kavir" | "wizard";
+export type CommandEffect = "shake" | "hacking" | "ravi" | "kavir" | "wizard" | "force";
 
 export type CommandOutput =
   | { lines: string[]; effect?: CommandEffect }
@@ -77,6 +77,7 @@ export const EGG_NAMES = [
   "kavir",
   "hack the mainframe",
   "confetti",
+  "use the force",
 ] as const;
 
 export type EggName = (typeof EGG_NAMES)[number];
@@ -125,6 +126,10 @@ const HINT_RHYMES: Record<EggName, [string, string]> = {
   confetti: [
     "Even green screens love a show.",
     "Throw CONFETTI. Make it glow.",
+  ],
+  "use the force": [
+    "Calm the mind. The stars draw near.",
+    "USE THE FORCE. The path is clear.",
   ],
 };
 
@@ -369,6 +374,12 @@ export const commands: Record<string, Handler> = {
   "hack the mainframe": (): CommandOutput => ({
     lines: [],
     effect: "hacking",
+  }),
+
+  // Hidden — intentionally absent from `help`. Drives the hyperspace jump in Terminal.
+  "use the force": (): CommandOutput => ({
+    lines: [],
+    effect: "force",
   }),
 
   confetti: () => {

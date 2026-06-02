@@ -28,6 +28,11 @@ export default function Terminal() {
   const [wizardActivated, setWizardActivated] = useState(false);
   const [wizardEnchanted, setWizardEnchanted] = useState(false);
   const [wizardPrompt, setWizardPrompt] = useState("wizard@ravios:~$");
+  const [forceRunning, setForceRunning] = useState(false);
+  const [forceJumping, setForceJumping] = useState(false);
+  const [forceActivated, setForceActivated] = useState(false);
+  const [forceReticle, setForceReticle] = useState(false);
+  const [forceStars, setForceStars] = useState<{ id: number; y: number; delay: number; duration: number; length: number; thickness: number; color: string }[]>([]);
   const [typewriting, setTypewriting] = useState(false);
   const [raviFlicker, setRaviFlicker] = useState(false);
   const [kavirFlicker, setKavirFlicker] = useState(false);
@@ -554,6 +559,63 @@ export default function Terminal() {
     void label;
   }
 
+  async function runForce() {
+    setForceRunning(true);
+
+    const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+    const add = (line: string) => setLines((prev) => [...prev, line]);
+
+    // Cinematic lead-in
+    add("SEARCHING THE FORCE...");
+    await pause(900);
+    add("");
+    add("CONNECTION ESTABLISHED.");
+    await pause(800);
+
+    // Streaking starfield for the jump (white/blue, varied length + speed)
+    const STAR_COLORS = ["#ffffff", "#e0f2fe", "#bae6fd", "#7dd3fc", "#38bdf8"];
+    setForceStars(
+      Array.from({ length: 30 }, (_, i) => ({
+        id: i,
+        y: Math.random() * 100,
+        delay: Math.random() * 550,
+        duration: 480 + Math.random() * 520,
+        length: 12 + Math.random() * 28,
+        thickness: 1 + Math.random() * 2,
+        color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+      }))
+    );
+
+    // Dim → blue hologram shift + acceleration pulse + shake (~1.5s)
+    setForceJumping(true);
+    await pause(1500);
+    setForceJumping(false);
+    setForceStars([]);
+
+    // Lock into Jedi/hologram mode — terminal shifts green → cool blue
+    setForceActivated(true);
+
+    // Brief targeting reticle on arrival
+    setForceReticle(true);
+    setTimeout(() => setForceReticle(false), 900);
+
+    await pause(450);
+    add("");
+    add("THE FORCE IS STRONG WITH AGENT RMP.");
+    await pause(800);
+    add("");
+    add("BUILDER POTENTIAL DETECTED.");
+    await pause(650);
+    add("");
+    add("TRAINING MODE: ENABLED.");
+    await pause(1200);
+    add("");
+    add("Stay on target...");
+
+    setForceRunning(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
   async function runTypewriter(cmdText: string, twLines: string[]) {
     const ac = new AbortController();
     typewriterAbortRef.current = ac;
@@ -639,7 +701,7 @@ export default function Terminal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (hacking || raviRunning || kavirRunning || wizardRunning || confirming || typewriting) return;
+    if (hacking || raviRunning || kavirRunning || wizardRunning || forceRunning || confirming || typewriting) return;
     const cmd = input.trim();
 
     if (cmd === "") {
@@ -672,6 +734,9 @@ export default function Terminal() {
             } else if (effect === "wizard") {
               setLines((prev) => [...prev, `> ${cmd}`]);
               runWizard();
+            } else if (effect === "force") {
+              setLines((prev) => [...prev, `> ${cmd}`]);
+              runForce();
             } else {
               setLines((prev) => [...prev, `> ${cmd}`, ...out]);
               if (effect === "shake") triggerShake();
@@ -698,9 +763,29 @@ export default function Terminal() {
 
   return (
     <div
-      className={`relative flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}${raviFlicker ? " terminal-ravi-flicker" : ""}${kavirFlicker ? " terminal-kavir-sync" : ""}${wizardFlicker ? " terminal-wizard-flicker" : ""}${wizardEnchanted ? " terminal-wizard-enchanted" : ""}`}
+      className={`relative flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}${raviFlicker ? " terminal-ravi-flicker" : ""}${kavirFlicker ? " terminal-kavir-sync" : ""}${wizardFlicker ? " terminal-wizard-flicker" : ""}${wizardEnchanted ? " terminal-wizard-enchanted" : ""}${forceActivated ? " terminal-jedi" : ""}${forceJumping ? " terminal-force-jump" : ""}`}
       onClick={handleContainerClick}
     >
+      {(forceStars.length > 0 || forceReticle) && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-30">
+          {forceStars.map(({ id, y, delay, duration, length, thickness, color }) => (
+            <span
+              key={id}
+              className="hyperspace-streak"
+              style={{
+                top: `${y}%`,
+                width: `${length}vw`,
+                height: `${thickness}px`,
+                animationDelay: `${delay}ms`,
+                animationDuration: `${duration}ms`,
+                background: `linear-gradient(to right, transparent, ${color})`,
+                boxShadow: `0 0 6px ${color}`,
+              }}
+            />
+          ))}
+          {forceReticle && <div className="force-reticle" />}
+        </div>
+      )}
       {glyphRain.length > 0 && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
           {glyphRain.map(({ id, x, y, glyph, delay, size, scheme }) => (
@@ -734,16 +819,16 @@ export default function Terminal() {
         <div ref={bottomRef} />
       </div>
 
-      {!booting && !hacking && !raviRunning && !kavirRunning && !wizardRunning && !typewriting && (
+      {!booting && !hacking && !raviRunning && !kavirRunning && !wizardRunning && !forceRunning && !typewriting && (
         <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
-          <span className="select-none">{confirming ? "" : wizardActivated ? wizardPrompt : kavirActivated ? "agent-rmp+kavir@ravios:~$" : raviActivated ? "agent-rmp@ravios:~$" : ">"}</span>
+          <span className="select-none">{confirming ? "" : forceActivated ? "jedi@ravios:$" : wizardActivated ? wizardPrompt : kavirActivated ? "agent-rmp+kavir@ravios:~$" : raviActivated ? "agent-rmp@ravios:~$" : ">"}</span>
           <div className="relative flex-1">
             <input
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full bg-transparent outline-none caret-transparent text-green-400"
+              className={`w-full bg-transparent outline-none caret-transparent ${forceActivated ? "text-sky-300" : "text-green-400"}`}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
