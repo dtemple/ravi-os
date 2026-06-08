@@ -7,8 +7,8 @@ const BOOT_LINES = [
   "WELCOME BACK, AGENT RMP.",
   "",
   "  [✓] MISSION 0 — UNLOCK THE TOOLS         COMPLETE",
-  "  [▶] MISSION 1 — BUILD YOUR BASE          IN PROGRESS  (target: Llama Parade)",
-  "  [ ] MISSION 2 — CREATE SOMETHING WEIRD   LOCKED",
+  "  [✓] MISSION 1 — BUILD YOUR BASE          COMPLETE  (2 sites shipped)",
+  "  [▶] MISSION 2 — READY FOR PRIME TIME     IN PROGRESS",
 ];
 
 export default function Terminal() {
@@ -102,10 +102,10 @@ export default function Terminal() {
         "Connection re-established.",
         "",
         "  [✓] MISSION 0  COMPLETE",
-        "  [▶] MISSION 1  IN PROGRESS — target: Llama Parade",
-        "  [ ] MISSION 2  LOCKED",
+        "  [✓] MISSION 1  COMPLETE — 2 sites live",
+        "  [▶] MISSION 2  IN PROGRESS — ready for prime time",
         "",
-        "Type 'mission 1' for the briefing.",
+        "Type 'mission 2' for the briefing.",
       ]);
       setTimeout(() => inputRef.current?.focus(), 0);
       return;
