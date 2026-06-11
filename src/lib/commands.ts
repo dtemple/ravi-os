@@ -2,7 +2,7 @@ import confetti from "canvas-confetti";
 
 export const CLEAR_SENTINEL = "__CLEAR__";
 
-export type CommandEffect = "shake" | "hacking" | "ravi" | "kavir" | "wizard" | "force";
+export type CommandEffect = "shake" | "hacking" | "ravi" | "kavir" | "wizard" | "force" | "graduate";
 
 export type CommandOutput =
   | { lines: string[]; effect?: CommandEffect }
@@ -440,5 +440,12 @@ export const commands: Record<string, Handler> = {
   wizard: (): CommandOutput => ({
     lines: [],
     effect: "wizard",
+  }),
+
+  // Hidden — THE GRADUATION PROTOCOL. Not in help, not in hints, not in tab
+  // completion. One-time ending for the final session, triggered manually.
+  graduate: (): CommandOutput => ({
+    lines: [],
+    effect: "graduate",
   }),
 };

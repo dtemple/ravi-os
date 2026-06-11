@@ -11,7 +11,7 @@ const BOOT_LINES = [
   "  [▶] MISSION 2 — READY FOR PRIME TIME     IN PROGRESS",
 ];
 
-export default function Terminal() {
+export default function Terminal({ onBreakout }: { onBreakout?: () => void }) {
   const [lines, setLines] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
@@ -34,6 +34,8 @@ export default function Terminal() {
   const [forceReticle, setForceReticle] = useState(false);
   const [forceStars, setForceStars] = useState<{ id: number; y: number; delay: number; duration: number; length: number; thickness: number; color: string }[]>([]);
   const [typewriting, setTypewriting] = useState(false);
+  const [gradPhase, setGradPhase] = useState<"idle" | "prompt" | "button" | "failing">("idle");
+  const [gradGlitch, setGradGlitch] = useState(false);
   const [raviFlicker, setRaviFlicker] = useState(false);
   const [kavirFlicker, setKavirFlicker] = useState(false);
   const [wizardFlicker, setWizardFlicker] = useState(false);
@@ -234,7 +236,8 @@ export default function Terminal() {
       e.preventDefault();
       const prefix = input.toLowerCase();
       if (!prefix) return;
-      const keys = Object.keys(commands);
+      // `graduate` stays invisible — even to tab completion
+      const keys = Object.keys(commands).filter((k) => k !== "graduate");
       const matches = keys.filter((k) => k.startsWith(prefix));
       if (matches.length === 1) {
         setInput(matches[0]);
@@ -616,6 +619,93 @@ export default function Terminal() {
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
+  // ── THE GRADUATION PROTOCOL (hidden: graduate) ─────────────────────────────
+  // Phase 1: the system retires the input and authorizes a new interface.
+  async function runGraduatePrompt() {
+    setGradPhase("prompt");
+
+    const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+    const add = (line: string) => setLines((prev) => [...prev, line]);
+    const typeLine = async (line: string, charMs = 32) => {
+      add("");
+      for (let c = 0; c < line.length; c++) {
+        await pause(charMs);
+        setLines((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = line.slice(0, c + 1);
+          return next;
+        });
+      }
+    };
+
+    await pause(1000);
+    add("");
+    await typeLine("TERMINAL INPUT NO LONGER REQUIRED.");
+    await pause(1200);
+    add("");
+    await typeLine("A NEW INTERFACE HAS BEEN AUTHORIZED.");
+    await pause(1500);
+    setGradPhase("button");
+  }
+
+  // Phase 2: tapping CONTINUE destabilizes terminal mode. The parent shell
+  // takes over for the actual breakout via onBreakout().
+  async function runGraduateFailure() {
+    setGradPhase("failing");
+
+    const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+    const add = (line: string) => setLines((prev) => [...prev, line]);
+    const typeLine = async (line: string, charMs = 32) => {
+      add("");
+      for (let c = 0; c < line.length; c++) {
+        await pause(charMs);
+        setLines((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = line.slice(0, c + 1);
+          return next;
+        });
+      }
+    };
+
+    add("");
+    await pause(1000);
+    add("...");
+    await pause(1200);
+    add("...");
+    await pause(1400);
+    add("...");
+    await pause(1600);
+    add("");
+    await typeLine("SYSTEM MESSAGE RECEIVED.");
+    await pause(1500);
+    add("");
+    await typeLine("WARNING:");
+    await pause(700);
+    await typeLine("TERMINAL MODE UNSTABLE.");
+    await pause(1100);
+
+    // The terminal starts coming apart
+    triggerShake();
+    await pause(700);
+    setGradGlitch(true);
+    await pause(600);
+    add("");
+    add(randomGibberish());
+    await pause(220);
+    add(randomGibberish());
+    await pause(320);
+    add(randomGibberish());
+    await pause(650);
+    add("");
+    await typeLine("CONTAINMENT FAILING.", 22);
+    await pause(900);
+    add("");
+    await typeLine("EXITING TERMINAL MODE...", 26);
+    await pause(1100);
+
+    onBreakout?.();
+  }
+
   async function runTypewriter(cmdText: string, twLines: string[]) {
     const ac = new AbortController();
     typewriterAbortRef.current = ac;
@@ -701,7 +791,7 @@ export default function Terminal() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (hacking || raviRunning || kavirRunning || wizardRunning || forceRunning || confirming || typewriting) return;
+    if (hacking || raviRunning || kavirRunning || wizardRunning || forceRunning || confirming || typewriting || gradPhase !== "idle") return;
     const cmd = input.trim();
 
     if (cmd === "") {
@@ -737,6 +827,9 @@ export default function Terminal() {
             } else if (effect === "force") {
               setLines((prev) => [...prev, `> ${cmd}`]);
               runForce();
+            } else if (effect === "graduate") {
+              setLines((prev) => [...prev, `> ${cmd}`]);
+              runGraduatePrompt();
             } else {
               setLines((prev) => [...prev, `> ${cmd}`, ...out]);
               if (effect === "shake") triggerShake();
@@ -763,7 +856,7 @@ export default function Terminal() {
 
   return (
     <div
-      className={`relative flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}${raviFlicker ? " terminal-ravi-flicker" : ""}${kavirFlicker ? " terminal-kavir-sync" : ""}${wizardFlicker ? " terminal-wizard-flicker" : ""}${wizardEnchanted ? " terminal-wizard-enchanted" : ""}${forceActivated ? " terminal-jedi" : ""}${forceJumping ? " terminal-force-jump" : ""}`}
+      className={`relative flex flex-col flex-1 min-h-0 bg-black text-green-400 font-mono text-sm p-4 cursor-text terminal-glow${shaking ? " terminal-shake" : ""}${raviFlicker ? " terminal-ravi-flicker" : ""}${kavirFlicker ? " terminal-kavir-sync" : ""}${wizardFlicker ? " terminal-wizard-flicker" : ""}${wizardEnchanted ? " terminal-wizard-enchanted" : ""}${forceActivated ? " terminal-jedi" : ""}${forceJumping ? " terminal-force-jump" : ""}${gradGlitch ? " terminal-grad-glitch" : ""}`}
       onClick={handleContainerClick}
     >
       {(forceStars.length > 0 || forceReticle) && (
@@ -819,7 +912,20 @@ export default function Terminal() {
         <div ref={bottomRef} />
       </div>
 
-      {!booting && !hacking && !raviRunning && !kavirRunning && !wizardRunning && !forceRunning && !typewriting && (
+      {/* The first button in RaviOS history — terminal input has been retired */}
+      {gradPhase === "button" && (
+        <div className="flex justify-center py-5 shrink-0">
+          <button
+            type="button"
+            onClick={() => runGraduateFailure()}
+            className="grad-continue-btn"
+          >
+            CONTINUE
+          </button>
+        </div>
+      )}
+
+      {!booting && !hacking && !raviRunning && !kavirRunning && !wizardRunning && !forceRunning && !typewriting && gradPhase === "idle" && (
         <form onSubmit={handleSubmit} className="flex items-center gap-1 shrink-0">
           <span className="select-none">{confirming ? "" : forceActivated ? "jedi@ravios:$" : wizardActivated ? wizardPrompt : kavirActivated ? "agent-rmp+kavir@ravios:~$" : raviActivated ? "agent-rmp@ravios:~$" : ">"}</span>
           <div className="relative flex-1">
