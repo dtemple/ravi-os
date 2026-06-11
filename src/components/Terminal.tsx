@@ -8,7 +8,10 @@ const BOOT_LINES = [
   "",
   "  [✓] MISSION 0 — UNLOCK THE TOOLS         COMPLETE",
   "  [✓] MISSION 1 — BUILD YOUR BASE          COMPLETE  (2 sites shipped)",
-  "  [▶] MISSION 2 — READY FOR PRIME TIME     IN PROGRESS",
+  "  [✓] MISSION 2 — READY FOR PRIME TIME     COMPLETE",
+  "",
+  "ONLY ONE COMMAND LEFT TO RUN.",
+  "TYPE GRADUATE TO CONTINUE.",
 ];
 
 export default function Terminal({ onBreakout }: { onBreakout?: () => void }) {
@@ -105,9 +108,10 @@ export default function Terminal({ onBreakout }: { onBreakout?: () => void }) {
         "",
         "  [✓] MISSION 0  COMPLETE",
         "  [✓] MISSION 1  COMPLETE — 2 sites live",
-        "  [▶] MISSION 2  IN PROGRESS — ready for prime time",
+        "  [✓] MISSION 2  COMPLETE — prime time achieved",
         "",
-        "Type 'mission 2' for the briefing.",
+        "ONLY ONE COMMAND LEFT TO RUN.",
+        "TYPE GRADUATE TO CONTINUE.",
       ]);
       setTimeout(() => inputRef.current?.focus(), 0);
       return;
@@ -156,10 +160,6 @@ export default function Terminal({ onBreakout }: { onBreakout?: () => void }) {
 
       if (skipRef.current) return;
 
-      const helpOutput = commands.help([]);
-      if (Array.isArray(helpOutput)) {
-        setLines((prev) => [...prev, "", ...helpOutput]);
-      }
       completeBoot(true);
     }
 
